@@ -140,7 +140,7 @@ STATIC_URL = '/static/'
 #################################
 
 # 静态文件
-STATICFILES_DIR = [os.path.join(BASE_DIR, 'static')]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 #django认证系统使用的模型类
 AUTH_USER_MODEL = 'user.User'
