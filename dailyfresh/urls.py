@@ -18,9 +18,9 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('user/', include('user.urls')),
-    path('cart/', include('cart.urls')),
-    path('order/', include('order.urls')),
+    path('user/', include(('user.urls', 'user'), namespace='user')),
+    path('cart/', include(('cart.urls', 'cart'), namespace='cart')),
+    path('order/', include(('order.urls', 'order'), namespace='order')),
     #  path('tinymce/', include('tinymce.urls')), # 富文本类型
-    path('', include('goods.urls')),
+    path('', include(('goods.urls', 'goods'), namespace='goods')),
 ]
