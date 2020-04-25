@@ -21,5 +21,6 @@ urlpatterns = [
     path('user/', include('user.urls')),
     path('cart/', include('cart.urls')),
     path('order/', include('order.urls')),
+    #  path('tinymce/', include('tinymce.urls')), # 富文本类型
     path('', include('goods.urls')),
 ]
