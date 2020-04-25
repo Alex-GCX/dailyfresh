@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'goods', # 商品模块
     'cart', # 购物车模块
     'order', # 订单模块
+    #  'tinymce', # 富文本类型
+    'ckeditor', # 富文本编辑器 django-ckeditor
 ]
 
 MIDDLEWARE = [
@@ -144,11 +146,11 @@ STATICFILES_DIR = [os.path.join(BASE_DIR, 'static')]
 AUTH_USER_MODEL = 'user.User'
 
 # 富文本编辑器配置
-TINYMCE_DEFAULT_CONFIG = {
-    'theme': 'advanced',
-    'width': 600,
-    'height': 400,
-}
+#  TINYMCE_DEFAULT_CONFIG = {
+    #  'theme': 'advanced',
+    #  'width': 600,
+    #  'height': 400,
+#  }
 #################################
 # add by Alex end
 #################################
