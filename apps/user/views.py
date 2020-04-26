@@ -129,11 +129,14 @@ class LoginView(View):
     def get(self, request):
         '''显示登录页面'''
         # 处理记住用户名
+        # 判断cookies中是否存在用户名
         username = request.COOKIES.get('username', '')
+        # 若存在，则把记住用户名的勾选框也勾上
         if username:
             checked = 'checked'
         else:
             checked = ''
+        # 将cookies中的用户名和勾选框传入HTML模板
         self.content['username'] = username
         self.content['checked'] = checked
         return self.my_render(request, self.content)
@@ -161,12 +164,10 @@ class LoginView(View):
         login(request, user)
 
         # 记住用户名
+        # 先获取重定向返回的HTTPResponse对象，需要再其上面添加cookie
         response = redirect(reverse('goods:index'))
-        print('---------------------')
-        print(remember)
-        print(username)
+        # 若记住用户名，则设置cookie，否则删除该cookie值
         if remember == 'on':
-            print(username)
             response.set_cookie('username', username, max_age=7*24*3600)
         else:
             response.delete_cookie('username')
