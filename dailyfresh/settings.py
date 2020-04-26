@@ -144,6 +144,9 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 #django认证系统使用的模型类
 AUTH_USER_MODEL = 'user.User'
+# 使用django自带的认证方法authenticate时，若用户账号密码正确，但是未激活
+# 也会返回None，需要加上该设置，让其去掉激活的判断
+AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.AllowAllUsersModelBackend']
 
 # 富文本编辑器配置
 #  TINYMCE_DEFAULT_CONFIG = {
@@ -151,6 +154,37 @@ AUTH_USER_MODEL = 'user.User'
     #  'width': 600,
     #  'height': 400,
 #  }
+
+# 163邮箱发送
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.163.com'
+EMAIL_PORT = 25
+#发送邮件的邮箱
+EMAIL_HOST_USER = 'g1242556827@163.com'
+#在邮箱中设置的客户端授权密码
+EMAIL_HOST_PASSWORD = 'ENYWOVQSLWHGIUEX'
+#收件人看到的发件人
+EMAIL_FROM = '天天生鲜<g1242556827@163.com>'
+
+# celery参数配置
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0' # Broker配置，使用Redis作为消息中间件
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/1' # BACKEND配置，这里使用redis
+CELERY_RESULT_SERIALIZER = 'json' # 结果序列化方案
+
+# django 缓存设置cache: 使用redis数据库当做缓存的存储位置
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+# django 会话设置session: 将session存储在缓存中(默认为数据表django_session中)
+# 配合上面将缓存存在redis中，即可将session存在redis中
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
 #################################
 # add by Alex end
 #################################
