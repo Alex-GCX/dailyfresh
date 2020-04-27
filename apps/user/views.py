@@ -17,6 +17,10 @@ class RegisterView(View):
     template_name = 'user/register.html'
     content = {'errmsg': ''}
 
+    def __init__(self):
+        View.__init__(self)
+        self.content = {'errmsg': ''}
+
     def my_render(self, request, content):
         '''显示注册页面'''
         return render(request, self.template_name, content)
@@ -121,6 +125,10 @@ class LoginView(View):
     '''登录视图'''
     template_name = 'user/login.html'
     content = {'errmsg': ''}
+
+    def __init__(self):
+        View.__init__(self)
+        self.content['errmsg'] = ''
 
     def my_render(self, request, content):
         '''显示登录页面'''
