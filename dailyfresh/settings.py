@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 import sys
+from django.urls import reverse
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -167,15 +168,15 @@ EMAIL_HOST_PASSWORD = 'ENYWOVQSLWHGIUEX'
 EMAIL_FROM = '天天生鲜<g1242556827@163.com>'
 
 # celery参数配置
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0' # Broker配置，使用Redis作为消息中间件
-CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/1' # BACKEND配置，这里使用redis
+CELERY_BROKER_URL = 'redis://localhost:6379/0' # Broker配置，使用Redis作为消息中间件
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/1' # BACKEND配置，这里使用redis
 CELERY_RESULT_SERIALIZER = 'json' # 结果序列化方案
 
 # django 缓存设置cache: 使用redis数据库当做缓存的存储位置
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/2",
+        "LOCATION": "redis://localhost:6379/2",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
@@ -185,6 +186,12 @@ CACHES = {
 # 配合上面将缓存存在redis中，即可将session存在redis中
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
+
+# 用户登录地址
+LOGIN_URL = '/user/login'
+
+# 使用redis存储用户浏览记录
+
 #################################
 # add by Alex end
 #################################

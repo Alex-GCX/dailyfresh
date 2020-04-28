@@ -4,11 +4,16 @@ from django.http import HttpResponse
 from django.urls import reverse
 from django.views.generic import View
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from itsdangerous import SignatureExpired
+from django.contrib.auth.mixins import LoginRequiredMixin
+from datetime import datetime
+from django_redis import get_redis_connection
 from .tasks import send_mail_task
-from .models import User
+from .models import User, Address
+from goods.models import Goods
 
 # Create your views here.
 
@@ -167,13 +172,16 @@ class LoginView(View):
         # 判断是否激活
         if user.is_active == 0:
             self.content['errmsg'] = '用户未激活!'
+            return self.my_render(request, self.content)
 
         # 有些页面是需要用户登录后才能访问的，需要记录用户的登录状态
         login(request, user)
 
+        # 登记登录按钮后，可能重定向到其他next网址，若无则重定向首页
+        dir_url = request.GET.get('next', default=reverse('goods:index'))
         # 记住用户名
         # 先获取重定向返回的HTTPResponse对象，需要再其上面添加cookie
-        response = redirect(reverse('goods:index'))
+        response = redirect(dir_url)
         # 若记住用户名，则设置cookie，否则删除该cookie值
         if remember == 'on':
             response.set_cookie('username', username, max_age=7*24*3600)
@@ -181,3 +189,97 @@ class LoginView(View):
             response.delete_cookie('username')
 
         return response
+
+class LogoutView(View):
+    '''登出视图'''
+    def get(self, request):
+        '''显示登出'''
+        logout(request)
+        return redirect(reverse('user:login'))
+
+class UserInfoView(LoginRequiredMixin, View):
+    '''用户中心信息类'''
+    template_name = 'user/user_center_info.html'
+    context = {'type': ''}
+
+    def get(self, request):
+        '''显示用户信息'''
+        user = request.user
+        # 获取默认收货地址
+        address = Address.objects.get_default_address(user)
+        self.context['type'] = 'info'
+        self.context['address'] = address
+
+        # 获取历史浏览记录
+        # 连接redis数据库
+        connect = get_redis_connection('default')
+        # 获取当前用户key值,格式为history_userid
+        history_key = 'history_%d'%(user.id)
+        # 获取最新的五条历史记录
+        history_list = connect.lrange(history_key, 0, 4)
+        # 获取商品对象
+        goods_list = [Goods.objects.get(id=i) for i in history_list]
+        self.context['goods_list'] = goods_list
+
+        return render(request, self.template_name, self.context)
+
+class UserOrderView(LoginRequiredMixin, View):
+    '''用户中心订单类'''
+    template_name = 'user/user_center_order.html'
+    context = {'type': ''}
+
+    def get(self, request):
+        '''显示用户订单'''
+        self.context['type'] = 'order'
+        return render(request, self.template_name, self.context)
+
+class UserAddressView(LoginRequiredMixin, View):
+    '''用户中心地址类'''
+    template_name = 'user/user_center_address.html'
+    context = {'type': '',
+               'errmsg': '',
+              }
+    def __init__(self):
+        super(UserAddressView, self).__init__()
+        self.context['errmsg'] = ''
+
+    def get(self, request):
+        '''显示用户收货地址'''
+        self.context['type'] = 'address'
+        # 获取默认收货地址
+        address = Address.objects.get_default_address(request.user)
+        self.context['address'] = address
+        return render(request, self.template_name, self.context)
+
+    def post(self, request):
+        '''提交默认地址'''
+        # 获取当前用户，返回值类型为User.objects.get的数据库对象
+        user = request.user
+        # 获取数据
+        receiver = request.POST['receiver']
+        address = request.POST['address']
+        zip_code = request.POST.get('zip_code')
+        phone = request.POST['phone']
+        # 校验数据必填
+        if not all([receiver, address, phone]):
+            self.context['errmsg'] = '数据不完整,除邮编外其他必填!'
+            return render(request, self.template_name, self.context)
+        # 校验手机号
+        if not re.match(r'^1[3|4|5|7|8][0-9]{9}$', phone):
+            self.context['errmsg'] = '手机格式不正确!'
+            return render(request, self.template_name, self.context)
+        # 数据插入数据库
+        # 更新其他地址为不默认
+        Address.objects.filter(user=user,
+                               is_default=True).update(is_default=False,
+                                                       update_time=datetime.now())
+        address = user.address_set.create(user=user, receiver=receiver,
+                                          address=address, zip_code=zip_code,
+                                          phone=phone,
+                                          is_default=True)
+        return redirect(reverse('user:address'))
+
+@login_required
+def test(request):
+    print(request.user)
+    return HttpResponse('跳转成功')
