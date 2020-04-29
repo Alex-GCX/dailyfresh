@@ -190,8 +190,12 @@ SESSION_CACHE_ALIAS = "default"
 # 用户登录地址
 LOGIN_URL = '/user/login'
 
-# 使用redis存储用户浏览记录
-
+# Fastdfs的客户端配置文件路径
+FDFS_CLIENT_CONF = 'utils/fastdfs/client.conf'
+# 让Django上传文件时调用自定义的文件存储类
+DEFAULT_FILE_STORAGE = 'utils.fastdfs.storage.FdfsStorage'
+# nginx服务器url路径
+NGINX_URL = 'http://%s:8888/'%(LOCAL_IP)
 #################################
 # add by Alex end
 #################################
