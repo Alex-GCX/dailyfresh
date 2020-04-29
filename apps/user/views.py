@@ -11,8 +11,8 @@ from itsdangerous import SignatureExpired
 from django.contrib.auth.mixins import LoginRequiredMixin
 from datetime import datetime
 from django_redis import get_redis_connection
-from .tasks import send_mail_task
-from .models import User, Address
+from user.tasks import send_mail_task
+from user.models import User, Address
 from goods.models import Goods
 
 # Create your views here.
