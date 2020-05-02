@@ -11,7 +11,7 @@ from itsdangerous import SignatureExpired
 from django.contrib.auth.mixins import LoginRequiredMixin
 from datetime import datetime
 from django_redis import get_redis_connection
-from user.tasks import send_mail_task
+from utils.tasks import send_mail_task
 from user.models import User, Address
 from goods.models import Goods
 
@@ -116,10 +116,12 @@ class RegisterActiveView(View):
             info = serializer.loads(token)
             # 获取userid
             user_id = info['userid']
+
             # 更新数据库数据
             user = User.objects.get(id=user_id)
             user.is_active = 1
             user.save()
+
             # 返回登录页面
             return redirect(reverse('user:login'))
         except SignatureExpired:
@@ -149,6 +151,7 @@ class LoginView(View):
             checked = 'checked'
         else:
             checked = ''
+
         # 将cookies中的用户名和勾选框传入HTML模板
         self.content['username'] = username
         self.content['checked'] = checked
@@ -179,6 +182,7 @@ class LoginView(View):
 
         # 登记登录按钮后，可能重定向到其他next网址，若无则重定向首页
         dir_url = request.GET.get('next', default=reverse('goods:index'))
+
         # 记住用户名
         # 先获取重定向返回的HTTPResponse对象，需要再其上面添加cookie
         response = redirect(dir_url)
@@ -240,7 +244,7 @@ class UserAddressView(LoginRequiredMixin, View):
                'errmsg': '',
               }
     def __init__(self):
-        super(UserAddressView, self).__init__()
+        super().__init__()
         self.context['errmsg'] = ''
 
     def get(self, request):
@@ -255,19 +259,23 @@ class UserAddressView(LoginRequiredMixin, View):
         '''提交默认地址'''
         # 获取当前用户，返回值类型为User.objects.get的数据库对象
         user = request.user
+
         # 获取数据
         receiver = request.POST['receiver']
         address = request.POST['address']
         zip_code = request.POST.get('zip_code')
         phone = request.POST['phone']
+
         # 校验数据必填
         if not all([receiver, address, phone]):
             self.context['errmsg'] = '数据不完整,除邮编外其他必填!'
             return render(request, self.template_name, self.context)
+
         # 校验手机号
         if not re.match(r'^1[3|4|5|7|8][0-9]{9}$', phone):
             self.context['errmsg'] = '手机格式不正确!'
             return render(request, self.template_name, self.context)
+
         # 数据插入数据库
         # 更新其他地址为不默认
         Address.objects.filter(user=user,
