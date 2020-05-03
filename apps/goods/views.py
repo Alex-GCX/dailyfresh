@@ -7,6 +7,7 @@ from utils.utils import get_cart_count, get_index_data
 from django.core.cache import cache
 from django_redis import get_redis_connection
 from django.core.paginator import Paginator
+from haystack.generic_views import SearchView
 # Create your views here.
 
 class IndexView(View):
@@ -47,6 +48,9 @@ class ListView(View):
 
         # 新品推荐
         new_goods = Goods.objects.filter(goodstype=goods_type).order_by('-create_time')[:2]
+
+        # 购物车数量
+        cart_count = get_cart_count(request)
 
         # 商品列表
         # 排序方式
@@ -99,6 +103,7 @@ class ListView(View):
             'sort': sort,
             'page': page,
             'page_list': page_list,
+            'cart_count': cart_count,
         }
         return render(request, self.template_name, context)
 
@@ -148,3 +153,19 @@ class DetailView(View):
             'others': others,
         }
         return render(request, self.template_name, context)
+
+class GoodsSearchView(SearchView):
+    '''商品搜索视图'''
+    def get_context_data(self, *args, **kwargs):
+        context = super(GoodsSearchView, self).get_context_data(*args, **kwargs)
+        # 获取想要的数据库信息
+        # 获取全部商品种类
+        all_type = GoodsType.objects.all()
+        # 获取购物车数量
+        cart_count = get_cart_count(self.request)
+        # 添加上下文
+        context['all_type'] = all_type
+        context['cart_count'] = cart_count
+        context['page'] = context['page_obj']
+        print(context)
+        return context

@@ -44,12 +44,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    #  'tinymce', # 富文本类型
+    'ckeditor', # 富文本编辑器 django-ckeditor
+    'haystack', # 全文搜索框架
     'user', # 用户模块
     'goods', # 商品模块
     'cart', # 购物车模块
     'order', # 订单模块
-    #  'tinymce', # 富文本类型
-    'ckeditor', # 富文本编辑器 django-ckeditor
 ]
 
 MIDDLEWARE = [
@@ -196,6 +197,17 @@ FDFS_CLIENT_CONF = 'utils/fastdfs/client.conf'
 DEFAULT_FILE_STORAGE = 'utils.fastdfs.storage.FdfsStorage'
 # nginx服务器url路径
 NGINX_URL = 'http://%s:8888/'%(LOCAL_IP)
+
+# haystack+whoosh配置，全文检索框架
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        #  'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
+        'ENGINE': 'haystack.backends.whoosh_cn_backend.WhooshEngine',
+        'PATH': os.path.join(BASE_DIR, 'whoosh_index'),
+    },
+}
+# 设置查询结果每页显示多少条数据
+HAYSTACK_SEARCH_RESULTS_PER_PAGE = 10
 #################################
 # add by Alex end
 #################################

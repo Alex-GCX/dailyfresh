@@ -22,5 +22,6 @@ urlpatterns = [
     path('cart/', include(('cart.urls', 'cart'), namespace='cart')),
     path('order/', include(('order.urls', 'order'), namespace='order')),
     #  path('tinymce/', include('tinymce.urls')), # 富文本类型
+    #  path('search/', include('haystack.urls')),
     path('', include(('goods.urls', 'goods'), namespace='goods')),
 ]
