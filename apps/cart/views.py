@@ -3,14 +3,42 @@ from django.views.generic import View
 from django.http import JsonResponse
 from goods.models import Goods
 from django_redis import get_redis_connection
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 # Create your views here.
-class CartView(View):
+class CartView(LoginRequiredMixin, View):
     '''购物车视图类'''
     template_name = 'cart/cart.html'
-    def cart(self, request):
+    def get(self, request):
         '''显示购物车'''
-        return render(request, self.template_name)
+        user = request.user
+        # 获取购物车信息
+        connect = get_redis_connection('default')
+        cart_key = 'cart_%d'%(user.id)
+        cart = connect.hgetall(cart_key)
+        # 返回给前端的goods_list
+        goods_list = []
+        total_count = 0
+        total_amount = 0
+        for goods_id, count in cart.items():
+            goods = Goods.objects.get(id=int(goods_id))
+            # 小计
+            amount = goods.price * int(count)
+            # 给goods对象新增属性
+            goods.amount = amount
+            goods.count = int(count)
+            # 将商品添加至列表中
+            goods_list.append(goods)
+            # 合计
+            total_count += int(count)
+            total_amount += amount
+        # 组织上下文
+        context = {
+            'goods_list': goods_list,
+            'total_count': total_count,
+            'total_amount': total_amount,
+        }
+        return render(request, self.template_name, context)
 
 class CartAddView(View):
     '''加入购物车处理视图'''

@@ -19,7 +19,7 @@
             <div class="header">
                 <div class="welcome fl">欢迎来到天天生鲜!</div>
                 <div class="fr">
-                    {% if user %}
+                    {% if user.is_authenticated %}
                     <div class="login_btn fl">
                         欢迎您：<em>{{ user.username }}</em>
                         <span>|</span>
@@ -56,7 +56,7 @@
                 </form>
             </div>
             <div class="guest_cart fr">
-                <a href="#" class="cart_name fl">我的购物车</a>
+                <a href="{% url 'cart:cart' %}" class="cart_name fl">我的购物车</a>
                 <div class="goods_count fl" id="show_count">{{ cart_count }}</div>
             </div>
         </div>
