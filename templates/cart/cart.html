@@ -1,6 +1,7 @@
 {% extends 'base_no_cart.html' %}
 {% load static %}
 {% block title %}天天生鲜-购物车{% endblock title %}
+{% block infoname %}购物车{% endblock infoname %}
 {% block body %}
 <div class="total_count">全部商品<em>{{ total_count }}</em>件</div>
 <ul class="cart_list_th clearfix">
@@ -11,46 +12,38 @@
     <li class="col05">小计</li>
     <li class="col06">操作</li>
 </ul>
+<form method="post" action="{% url 'order:place' %}">
+    {% csrf_token %}
 {% for goods in goods_list %}
 <ul class="cart_list_td clearfix">
-    <li class="col01"><input type="checkbox" name="" checked></li>
-    <li class="col02"><img src="{{ goods.image.url }}"></li>
-    <li class="col03">{{ goods.name }}<br><em>{{ goods.price }}元/{{ goods.uom }}</em></li>
+    <li class="col01"><input type="checkbox" name="goods_ids" value="{{ goods.id }}" checked></li>
+    <li class="col02"><a href="{% url 'goods:detail' goods.id %}"><img src="{{ goods.image.url }}"></a></li>
+    <li class="col03"><a href="{% url 'goods:detail' goods.id %}">{{ goods.name }}<br><em>{{ goods.price }}元/{{ goods.uom }}</em></a></li>
     <li class="col04">{{ goods.uom }}</li>
     <li class="col05">{{ goods.price }}元</li>
     <li class="col06">
         <div class="num_add">
+            {% csrf_token %}
             <a href="javascript:;" class="add fl">+</a>
-            <input type="text" class="num_show fl" value="{{ goods.count }}">
+            <input type="text" goods_id="{{ goods.id }}" class="num_show fl" value="{{ goods.count }}">
             <a href="javascript:;" class="minus fl">-</a>
         </div>
     </li>
     <li class="col07">{{ goods.amount }}元</li>
-    <li class="col08"><a href="javascript:;">删除</a></li>
+    <li class="col08"><a href="javascript:;" class="delete">删除</a></li>
 </ul>
 {% endfor %}
 <ul class="settlements">
     <li class="col01"><input type="checkbox" name="" checked=""></li>
     <li class="col02">全选</li>
     <li class="col03">合计(不含运费)：<span>¥</span><em>{{ total_amount }}</em><br>共计<b>{{ total_count }}</b>件商品</li>
-    <li class="col04"><a href="place_order.html">去结算</a></li>
+    <li class="col04"><input type="submit" value='去结算'/></li>
 </ul>
+</form>
 {% endblock body %}
 {% block endfiles %}
 <script src="{% static 'js/jquery-1.12.4.min.js'%}"></script>
 <script>
-    //更新选中商品的总价格和总数量
-    function update_page_info(){
-        var total_amount = 0
-        var total_count = 0
-        $('.cart_list_td').find(':checked').parents('ul').each(function(){
-            total_count += parseInt($(this).find('.num_show').val())
-            total_amount += parseFloat($(this).find('.col07').text())
-        })
-        //更新总件数和价格
-        $('.settlements').find('em').text(total_amount)
-        $('.settlements').find('b').text(total_count)
-    }
     //全选按钮
     $('.settlements').find(':checkbox').change(function(){
         //获取全选checkbox的全选状态
@@ -62,6 +55,7 @@
         //刷新总价格和总数量
         update_page_info()
     })
+
     //单个CheckBox监听
     $('.cart_list_td').find(':checkbox').change(function(){
         //获取全部商品的数目
@@ -73,5 +67,125 @@
         //更新总数量和价格
         update_page_info()
     })
+
+    //加号点击事件
+    $('.add').click(function(){
+        count = update_count($(this).next(), 1)
+        goods_id = $(this).next().attr('goods_id')
+        //发送ajax请求
+        send_ajax_change(goods_id, count)
+    })
+
+    //减号点击事件
+    $('.minus').click(function(){
+        count = update_count($(this).prev(), -1)
+        goods_id = $(this).prev().attr('goods_id')
+        //发送ajax请求
+        send_ajax_change(goods_id, count)   
+    })
+
+    //手动修改数量
+    $('.num_show').blur(function(){
+        //获取数量
+        count = $(this).val()
+        if(isNaN(count) || count.trim().length==0 || parseInt(count) <=0){
+            count = 1
+            $(this).val(parseInt(count))
+        }    
+        //提交ajax请求
+        goods_id = $(this).attr('goods_id')
+        count = parseInt(count)
+        send_ajax_change(goods_id, count)
+    })
+
+    //删除按钮
+    $('.delete').click(function(){
+        //获取商品所在的ul元素
+        goods_ul = $(this).parents('.cart_list_td')
+        //获取商品id
+        goods_id = goods_ul.find('.num_show').attr('goods_id')
+        send_ajax_delete(goods_id)
+        //移除界面数据
+        goods_ul.remove()
+        //刷新总数量和总价格
+        update_page_info()
+    })
+
+    //数量加减
+    function update_count(num_show, num){
+        //获取原数量
+        count = parseInt(num_show.val())
+        //计算新数量
+        count += num
+        if (count <= 0){
+            count = 1
+        }
+        //重新设置数量
+        num_show.val(count)
+        return count
+    }
+
+    //更新选中商品的总价格和总数量
+    function update_page_info(){
+        var total_amount = 0
+        var total_count = 0
+        $('.cart_list_td').find(':checked').parents('ul').each(function(){
+            count = parseInt($(this).find('.num_show').val())
+            amount = parseFloat($(this).find('.col07').text())
+            total_count += count
+            total_amount += amount
+        })
+        //更新总件数和价格
+        $('.settlements').find('em').text(total_amount.toFixed(2))
+        $('.settlements').find('b').text(total_count)
+    }
+
+    //发送ajax请求,修改购物车信息
+    function send_ajax_change(goods_id, count){
+        csrf = $('input[name="csrfmiddlewaretoken"]').val()
+        parameter = {
+            'goods_id': goods_id,
+            'count': count,
+            'csrfmiddlewaretoken': csrf
+        }
+        $.post('change/', parameter, function(data){
+            //回调函数
+            if(data.status == 'S'){
+                //刷新全部商品件数
+                $('.total_count').children('em').text(data.total_count)
+                //刷新小计,找到传进来的goods_id对应的那一行input,找到其父节点下的小计节点
+                amount = parseInt(data.amount)
+                $('input[goods_id='+parameter.goods_id+']').parents('.cart_list_td').children('.col07').text(amount.toFixed(2)+'元')
+                {% comment %} a = "1" {% endcomment %}
+                {% comment %} alert($(`input[name=${a}]`).val()) {% endcomment %}
+                {% comment %} alert($('input[name='+a+']').val()) {% endcomment %}
+                //刷新总数量和总价格
+                update_page_info()
+            }
+            else{
+                alert(data.errmsg)
+                //将数量重置为改变前
+                $('input[goods_id='+parameter.goods_id+']').val(data.count)
+            }
+        })
+    }
+
+    //发送ajax请求，删除商品
+    function send_ajax_delete(goods_id){
+        csrf = $('input[name="csrfmiddlewaretoken"]').val()
+        parameter = {
+            'goods_id': goods_id,
+            'csrfmiddlewaretoken': csrf
+        }
+        $.post('delete/', parameter, function(data){
+            if(data.status == 'S'){
+                //刷新总数量
+                total_count = parseInt(data.total_count)
+                $('.total_count').children('em').text(total_count)
+            }else{
+                alert(data.errmsg)
+            }
+        })
+    }
 </script>
 {% endblock endfiles%}

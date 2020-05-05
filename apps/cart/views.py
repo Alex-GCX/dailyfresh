@@ -66,7 +66,7 @@ class CartAddView(View):
         try:
             goods_id = int(goods_id)
             goods = Goods.objects.get(id=goods_id)
-        except Exception as e:
+        except Goods.DoesNotExist:
             context['errmsg'] = '用户未登录!'
             return JsonResponse(context)
         # 数量格式是否正确
@@ -96,4 +96,101 @@ class CartAddView(View):
         # 返回数据
         context['status'] = 'S'
         context['cart_count'] = cart_count
+        return JsonResponse(context)
+
+class CartChangeView(View):
+    '''购物车改变视图'''
+    def post(self, request):
+        user = request.user
+        context = {
+            'status': 'E',
+            'errmsg': ''
+        }
+        # 判断是否登录
+        if not user.is_authenticated:
+            context['errmsg'] = '用户未登录!'
+            return JsonResponse(context)
+
+        # 获取数据
+        goods_id = request.POST.get('goods_id')
+        count = request.POST.get('count')
+        #  is_delete = request.POST.get('is_delete')
+
+        # 校验数据
+        if not all([goods_id, count]):
+            context['errmsg'] = '数据不完整!'
+            return JsonResponse(context)
+        # 商品是否存在
+        try:
+            goods = Goods.objects.get(id=int(goods_id))
+        except Goods.DoesNotExist:
+            context['errmsg'] = '商品不存在!'
+            return JsonResponse(context)
+        # 数量格式是否正确
+        try:
+            count = int(count)
+        except Exception as e:
+            context['errmsg'] = '数量格式不正确!'
+            return JsonResponse(context)
+
+        # 更新redis数据库
+        connect = get_redis_connection('default')
+        cart_key = 'cart_%d'%(user.id)
+        # 校验库存
+        if count > goods.onhand:
+            context['errmsg'] = '库存不足!'
+            # 返回原数量
+            context['count'] = int(connect.hget(cart_key, goods_id))
+            return JsonResponse(context)
+
+        # 更新值
+        connect.hset(cart_key, goods_id, count)
+
+        # 重新计算总件数
+        total_count = 0
+        values = connect.hvals(cart_key)
+        for val in values:
+            total_count += int(val)
+        # 上下文
+        context['amount'] = goods.price * count
+        context['total_count'] = total_count
+        context['status'] = 'S'
+        return JsonResponse(context)
+
+class CartDeleteView(View):
+    '''购物车删除视图'''
+    def post(self, request):
+        user = request.user
+        context = {
+            'status': 'E',
+            'errmsg': ''
+        }
+        if not user.is_authenticated:
+            context['errmsg'] = '用户未登录!'
+            return JsonResponse(context)
+        # 接收数据
+        goods_id = request.POST.get('goods_id')
+
+        # 校验数据
+        try:
+            goods_id = int(goods_id)
+            goods = Goods.objects.get(id=goods_id)
+        except Exception as e:
+            context['errmsg'] = '商品不存在'
+            return JsonResponse(context)
+
+        # 删除购物车数据
+        connect = get_redis_connection('default')
+        cart_key = 'cart_%d'%(user.id)
+        connect.hdel(cart_key, goods_id)
+
+        # 重新获取商品数量
+        vals = connect.hvals(cart_key)
+        total_count = 0
+        for val in vals:
+            total_count += int(val)
+
+        # 上下文
+        context['total_count'] = total_count
+        context['status'] = 'S'
         return JsonResponse(context)

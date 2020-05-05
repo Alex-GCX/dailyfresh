@@ -5,11 +5,17 @@ from db.base_model import BaseModel
 
 class OrderInfo(BaseModel):
     '''订单模型类'''
+    PAY_METHOD_DIC = {
+        '1': '货到付款',
+        '2': '微信支付',
+        '3': '支付宝',
+        '4': '银联支付',
+    }
     PAY_METHOD_CHOICES = [
-        (1, '货到付款'),
-        (2, '微信支付'),
-        (3, '支付宝'),
-        (4, '银联支付'),
+        (1, PAY_METHOD_DIC['1']),
+        (2, PAY_METHOD_DIC['2']),
+        (3, PAY_METHOD_DIC['3']),
+        (4, PAY_METHOD_DIC['4']),
     ]
 
     ORDER_STATUS_CHOICES = [
@@ -34,7 +40,7 @@ class OrderInfo(BaseModel):
                                         verbose_name='运费')
     order_status = models.SmallIntegerField(choices=ORDER_STATUS_CHOICES,
                                             default=1, verbose_name='订单状态')
-    trade_no = models.CharField(max_length=128, verbose_name='支付编号')
+    trade_no = models.CharField(max_length=128, default='', verbose_name='支付编号')
 
     class Meta:
         '''元数据'''
