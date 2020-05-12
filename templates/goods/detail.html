@@ -41,7 +41,7 @@
         <div class="total">总价：<em>{{ goods.price }}元</em></div>
         <div class="operate_btn">
 			{% csrf_token %}
-            <a href="javascript:;" class="buy_btn">立即购买</a>
+            <a href="javascript:;" goods_id = '{{ goods.id }}' class="buy_btn">立即购买</a>
 			<a href="javascript:;" goods_id = "{{ goods.id }}" class="add_cart" id="add_cart">加入购物车</a>
         </div>
     </div>
@@ -65,24 +65,24 @@
 
     <div class="r_wrap fr clearfix">
         <ul class="detail_tab clearfix">
-            <li class="active">商品介绍</li>
-            <li>评论</li>
+            <li id='tag_detail' class="active">商品介绍</li>
+            <li id='tag_comment'>评论</li>
         </ul>
 
-        <div class="tab_content">
+        <div class="tab_content" id='tab_detail'>
             <dl>
                 <dt>商品详情：</dt>
                 <dd>{{ goods.goodsspu.detail|safe }}</dd>
             </dl>
         </div>
 
-        <div class="tab_content">
+        <div class="tab_content" id='tab_comment' style='display: none'>
             <dl>
                 {% for order in orders %}
-                <dt>用户：{{ order.order.user.username }}&nbsp&nbsp{{ order.update_time }}：p</dt>
-                <dd>{{ order.comment }}</dd>
+                <dt>评论时间：{{ order.update_time }}&nbsp&nbsp评论用户：{{ order.order.user.username }}</dt>
+                <dd>评论内容：{{ order.comment }}</dd>
                 {% empty %}
-                暂无评论
+                <dt>暂无评论</dt>
                 {% endfor %}
             </dl>
         </div>
@@ -94,6 +94,24 @@
 
 <script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js'%}"></script>
 <script type="text/javascript">
+//点击商品介绍
+$('#tag_detail').click(function(){
+    //隐藏评论信息
+    $('#tag_comment').removeClass('active')
+    $('#tab_comment').hide()
+    //展示商品信息
+    $(this).addClass('active')
+    $('#tab_detail').show()
+})
+//点击评论
+$('#tag_comment').click(function(){
+    //隐藏商品介绍信息
+    $('#tag_detail').removeClass('active')
+    $('#tab_detail').hide()
+    //展示评论
+    $(this).addClass('active')
+    $('#tab_comment').show()
+})
 //计算总价
 update_goods_amout()
 function update_goods_amout(){
@@ -149,19 +167,21 @@ var $to_x = $('#show_count').offset().top;
 var $to_y = $('#show_count').offset().left;
 
 //点击加入购物车的click事件
-$('#add_cart').click(function(){
+function add_cart(add_btn, async=true){
 	//获取数量
 	count = $('.num_show').val()
 	//获取商品ID,手动给加入购物车按钮新增一个属性goods_id
-	goods_id = $(this).attr('goods_id')
+	goods_id = $(add_btn).attr('goods_id')
 	//csrf验证信息
 	csrf = $('input[name="csrfmiddlewaretoken"]').val()
 	//组织参数
 	parameter = {
 		'goods_id': goods_id,
-		'count': count,
+        'count': count,
 		'csrfmiddlewaretoken': csrf
 	}
+    //先设置是否同步
+    $.ajaxSettings.async = async
 	//发起Ajax请求
 	$.post('/cart/add/', parameter, function(data){
 		if (data.status == 'S'){
@@ -182,8 +202,46 @@ $('#add_cart').click(function(){
 		else{
 			//添加失败
 			alert(data.errmsg)
+            return false
 		}
 	})
+    $.ajaxSettings.async = true
+
+}
+$('#add_cart').click(function(){
+    add_cart($(this))
+})
+//点击立即购买发送的POST请求
+$.extend({
+    StandardPost:function(url,parameter){
+        var body = $(document.body),
+            form = $("<form method='post'></form>"),
+            input;
+        form.attr({"action":url});
+        $.each(parameter,function(key,value){
+            input = $("<input type='hidden'>");
+            input.attr({"name":key});
+            input.val(value);
+            form.append(input);
+        });
+        form.appendTo(document.body);
+        form.submit();
+        document.body.removeChild(form[0]);
+    }
+});
+//点击立即购买监听事件
+$('.buy_btn').click(function(){
+    //先后台加入购物车
+    if (add_cart($('#add_cart'), async=false)){
+        goods_ids = [$(this).attr('goods_id')]
+        csrf = $('input[name="csrfmiddlewaretoken"]').val()
+        parameter = {
+            'goods_ids': goods_ids,
+            'csrfmiddlewaretoken': csrf
+        }
+        url = '/order/place/'
+        $.StandardPost(url, parameter)
+    }
 })
 
 </script>

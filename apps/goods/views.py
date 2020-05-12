@@ -72,7 +72,7 @@ class ListView(View):
 
         # 分页
         # 创建分页对象，每页显示1条记录
-        paginator = Paginator(goods_list, 1)
+        paginator = Paginator(goods_list, 3)
         # 获取总页数
         total_page = paginator.num_pages
         # 判断参数的页码是否在分页页码范围内,不在则显示第一页
@@ -135,13 +135,17 @@ class DetailView(View):
         # 获取评论
         orders = OrderGoods.objects.filter(goods=goods).exclude(comment='').order_by('-update_time')
 
-        # 添加浏览记录
-        connect = get_redis_connection('default')
-        history_key = 'history_%d'%(request.user.id)
-        # 删除该商品的浏览记录
-        connect.lrem(history_key, 0, goods.id)
-        # 添加该商品为最新浏览记录
-        connect.lpush(history_key, goods.id)
+        user = request.user
+        if user.is_authenticated:
+            # 添加浏览记录
+            connect = get_redis_connection('default')
+            history_key = 'history_%d' % user.id
+            # 删除该商品的浏览记录
+            connect.lrem(history_key, 0, goods.id)
+            # 添加该商品为最新浏览记录
+            connect.lpush(history_key, goods.id)
+            # 只保存最近5条记录
+            connect.ltrim(history_key, 0, 4)
 
         # 组织上下文
         context = {
@@ -167,5 +171,4 @@ class GoodsSearchView(SearchView):
         context['all_type'] = all_type
         context['cart_count'] = cart_count
         context['page'] = context['page_obj']
-        print(context)
         return context

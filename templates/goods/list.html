@@ -1,4 +1,5 @@
 {% extends 'base_list.html'%}
+{% load static%}
 {% block title %}天天生鲜-商品列表{% endblock title%}
 {% block detail%}
 <div class="breadcrumb">
@@ -38,7 +39,8 @@
                 <div class="operate">
                     <span class="prize">￥{{ goods.price }}</span>
                     <span class="unit">{{ goods.price }}/{{ goods.uom }}</span>
-                    <a href="#" class="add_goods" title="加入购物车"></a>
+                    {% csrf_token %}
+                    <a href="#" goods_id="{{ goods.id }}" class="add_goods" title="加入购物车"></a>
                 </div>
             </li>
             {% endfor %}
@@ -58,3 +60,50 @@
     </div>
 </div>
 {% endblock detail %}
+{% block endfiles %}
+
+<div class="add_jump"></div>
+<script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js'%}"></script>
+<script type="text/javascript">
+
+//获取add_cart div元素左上角的坐标
+var $add_x = $('.add_goods').offset().top;
+var $add_y = $('.add_goods').offset().left;
+//获取show_count div元素左上角的坐标
+var $to_x = $('#show_count').offset().top;
+var $to_y = $('#show_count').offset().left;
+
+$('.add_goods').click(function(){
+    goods_id = $(this).attr('goods_id')
+    csrf = $('input[name="csrfmiddlewaretoken"]').val()
+    parameter = {
+        'goods_id': goods_id,
+        'count': 1,
+        'csrfmiddlewaretoken': csrf
+    }
+    //发送ajax请求
+    $.post('/cart/add/', parameter, function(data){
+        //回调
+        if (data.status == 'S'){
+            //加入成功
+			//购物车加入成功的动态效果
+			$(".add_jump").css({'left':$add_y+80,'top':$add_x+10,'display':'block'})
+			$(".add_jump").stop().animate(
+				{'left': $to_y+7,
+					'top': $to_x+7},
+				"fast", 
+				function() {
+					$(".add_jump").fadeOut('fast',function(){
+						//刷新右上角购物车数量
+						$('#show_count').html(data.cart_count);
+						});
+				});
+        }
+        else{
+            //加入失败
+            alert(data.errmsg)
+        }
+    })
+})
+</script>
+{% endblock endfiles %}

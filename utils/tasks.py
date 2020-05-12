@@ -22,6 +22,7 @@ def send_mail_task(username, to_email, token):
 def generate_static_index():
     # 获取需要展示的信息
     context = get_index_data()
+    context['cart_count'] = 0
     # 使用模板
     # 加载模板文件，返回模板对象
     template = loader.get_template('goods/index.html')

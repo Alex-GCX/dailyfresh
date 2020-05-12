@@ -43,6 +43,7 @@ class CartView(LoginRequiredMixin, View):
 class CartAddView(View):
     '''加入购物车处理视图'''
     def post(self, request):
+        '''加入购物车处理'''
         user = request.user
         context = {
             'status': 'E',
@@ -114,7 +115,6 @@ class CartChangeView(View):
         # 获取数据
         goods_id = request.POST.get('goods_id')
         count = request.POST.get('count')
-        #  is_delete = request.POST.get('is_delete')
 
         # 校验数据
         if not all([goods_id, count]):

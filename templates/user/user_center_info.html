@@ -26,7 +26,8 @@
                 <div class="operate">
                     <span class="prize">￥{{ goods.price }}</span>
                     <span class="unit">{{ goods.price }}/{{ goods.uom }}</span>
-                    <a href="#" class="add_goods" title="加入购物车"></a>
+                    {% csrf_token %}
+                    <a href="#" goods_id="{{ goods.id }}" class="add_goods" title="加入购物车"></a>
                 </div>
             </li>
             {% empty %}
@@ -36,3 +37,31 @@
     </div>
 </div>
 {% endblock right %}
+{% block endfiles %}
+<script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+<script type="text/javascript">
+//添加购物车按钮点击事件
+$('.add_goods').click(function(){
+    goods_id = $(this).attr('goods_id')
+    count = 1
+    csrf = $('input[name="csrfmiddlewaretoken"]').val()
+    parameter = {
+        'goods_id': goods_id,
+        'count': count,
+        'csrfmiddlewaretoken': csrf
+    }
+    //发送ajax请求，添加购物车
+    $.post('/cart/add/', parameter, function(data){
+        //回调
+        if(data.status == 'S'){
+            //添加成功
+            alert('添加购物车成功！')
+        }
+        else{
+            //添加失败
+            alert(data.errmsg)
+        }
+    })
+})
+</script>
+{% endblock endfiles %}

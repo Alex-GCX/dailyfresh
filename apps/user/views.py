@@ -11,9 +11,11 @@ from itsdangerous import SignatureExpired
 from django.contrib.auth.mixins import LoginRequiredMixin
 from datetime import datetime
 from django_redis import get_redis_connection
+from django.core.paginator import Paginator
 from utils.tasks import send_mail_task
 from user.models import User, Address
 from goods.models import Goods
+from order.models import OrderInfo, OrderGoods
 
 # Create your views here.
 
@@ -232,9 +234,45 @@ class UserOrderView(LoginRequiredMixin, View):
     template_name = 'user/user_center_order.html'
     context = {'type': ''}
 
-    def get(self, request):
+    def get(self, request, page_num):
         '''显示用户订单'''
         self.context['type'] = 'order'
+        user = request.user
+        # 获取订单信息
+        orders = OrderInfo.objects.filter(user=user).order_by('-create_time')
+        # 遍历订单头
+        for order in orders:
+            order_goods_list = OrderGoods.objects.filter(order=order)
+            # 动态给order增加属性
+            order.order_goods_list = order_goods_list
+            order.status_name = OrderInfo.ORDER_STATUS_DIC[order.order_status]
+            order.method_name = OrderInfo.PAY_METHOD_DIC[str(order.pay_method)]
+            # 遍历订单行
+            for order_goods in order_goods_list:
+                # 动态给order_goods增加属性
+                order_goods.amount = order_goods.price * order_goods.count
+
+        # 分页
+        # 获取Paginator对象
+        paginator = Paginator(orders, 3)
+        total_page = paginator.num_pages
+        # 校验参数页码
+        if page_num > total_page:
+            page_num = 1
+            # 获取Page对象
+        page = paginator.page(page_num)
+        # 页码,页面上最多显示3页
+        if total_page < 3:
+            pages = range(1, total_page + 1)
+        elif page_num < 2:
+            pages = range(1, 4)
+        elif page_num > total_page - 1:
+            pages = range(total_page-2, total_page+1)
+        else:
+            pages = range(page_num-1, page_num + 2)
+        # 组织上下文
+        self.context['page'] = page
+        self.context['pages'] = pages
         return render(request, self.template_name, self.context)
 
 class UserAddressView(LoginRequiredMixin, View):
