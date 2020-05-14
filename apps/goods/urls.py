@@ -20,5 +20,5 @@ urlpatterns = [
     path('goods/detail/<int:goods_id>/', DetailView.as_view(), name='detail'),
     path('goods/list/<int:goods_type_id>/<int:page_num>/', ListView.as_view(), name='list'),
     path('search/', GoodsSearchView.as_view(), name='search'),
-    path('', IndexView.as_view(), name='index'),
+    path('index/', IndexView.as_view(), name='index'),
 ]

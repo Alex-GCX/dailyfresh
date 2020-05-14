@@ -145,6 +145,10 @@ class LoginView(View):
 
     def get(self, request):
         '''显示登录页面'''
+        # 判断是否已登录
+        if request.user.is_authenticated:
+            # 已登录，跳转至首页
+            return redirect(reverse('goods:index'))
         # 处理记住用户名
         # 判断cookies中是否存在用户名
         username = request.COOKIES.get('username', '')

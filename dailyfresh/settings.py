@@ -28,7 +28,7 @@ sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 SECRET_KEY = '_wm!3sg!&9yn5@coj*jgm9pm_+cg6+leklo$3z2!)%t$4y9apx'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 # add by Alex 设置本地IP变量
 LOCAL_IP = '192.168.183.129'
@@ -144,6 +144,8 @@ STATIC_URL = '/static/'
 
 # 静态文件
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+# 收集的静态文件路径
+STATIC_ROOT = '/home/gong/study/projects/www/dailyfresh/static'
 
 #django认证系统使用的模型类
 AUTH_USER_MODEL = 'user.User'

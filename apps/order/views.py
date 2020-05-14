@@ -337,7 +337,11 @@ class OrderCheckView(View):
             return JsonResponse(context)
 
         # 执行查询
+        print('-----------------------开始查询-------------------')
         alipay_query(order, context)
+        print('----------查询完成--------------')
+        print(context)
+        print('----------打印完成-------------')
         return JsonResponse(context)
 
 class OrderCommentView(LoginRequiredMixin, View):
