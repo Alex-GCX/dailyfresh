@@ -258,22 +258,32 @@ class UserOrderView(LoginRequiredMixin, View):
 
         # 分页
         # 获取Paginator对象
-        paginator = Paginator(orders, 3)
+        paginator = Paginator(orders, 2)
         total_page = paginator.num_pages
         # 校验参数页码
         if page_num > total_page:
             page_num = 1
             # 获取Page对象
         page = paginator.page(page_num)
-        # 页码,页面上最多显示3页
-        if total_page < 3:
-            pages = range(1, total_page + 1)
-        elif page_num < 2:
-            pages = range(1, 4)
-        elif page_num > total_page - 1:
-            pages = range(total_page-2, total_page+1)
-        else:
-            pages = range(page_num-1, page_num + 2)
+        # 页码,页面上最多显示5页
+        # 显示的最小页码
+        min_page = page_num - 2
+        # 显示的最大页码
+        max_page = page_num + 2
+        # 若最小页码小于1，则设置最小页码为1
+        # 并将小于的值加在最大页码上，保证最小页码到最大页码有5页
+        diff = min_page - 1
+        if diff < 0:
+            min_page = 1
+            max_page -= diff
+        # 若最大页码大于总页数，则设置最大页码为总页数
+        # 并将大于的值减在最小页码上，保证最小页码到最大页码有5页
+        diff = max_page - total_page
+        if diff > 0:
+            max_page = total_page
+            min_page -= diff
+        # 设置显示的页码范围
+        pages = range(min_page, max_page + 1)
         # 组织上下文
         self.context['page'] = page
         self.context['pages'] = pages
