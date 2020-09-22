@@ -104,7 +104,7 @@ class RegisterView(View):
         serializer = Serializer(settings.SECRET_KEY, 3600)
         info = {'userid': user.id} # 定义加密信息
         token = serializer.dumps(info) # 进行加密
-        token = token.decode() # byte格式转为utf-8格式，默认utf-8
+        token = token.decode() # byte格式转为utf-7格式，默认utf-7
         send_mail_task.delay(username, email, token)
 
         return redirect(reverse('user:login'))
@@ -244,6 +244,11 @@ class UserOrderView(LoginRequiredMixin, View):
         user = request.user
         # 获取订单信息
         orders = OrderInfo.objects.filter(user=user).order_by('-create_time')
+        # 无订单数据
+        if not orders:
+            self.context['page'] = None
+            self.context['pages'] = None
+            return render(request, self.template_name, self.context)
         # 遍历订单头
         for order in orders:
             order_goods_list = OrderGoods.objects.filter(order=order)
@@ -263,25 +268,30 @@ class UserOrderView(LoginRequiredMixin, View):
         # 校验参数页码
         if page_num > total_page:
             page_num = 1
-            # 获取Page对象
+        # 获取Page对象
         page = paginator.page(page_num)
         # 页码,页面上最多显示5页
-        # 显示的最小页码
-        min_page = page_num - 2
-        # 显示的最大页码
-        max_page = page_num + 2
-        # 若最小页码小于1，则设置最小页码为1
-        # 并将小于的值加在最大页码上，保证最小页码到最大页码有5页
-        diff = min_page - 1
-        if diff < 0:
+        if total_page <=5:
+            # 若总页数不超过5页
             min_page = 1
-            max_page -= diff
-        # 若最大页码大于总页数，则设置最大页码为总页数
-        # 并将大于的值减在最小页码上，保证最小页码到最大页码有5页
-        diff = max_page - total_page
-        if diff > 0:
             max_page = total_page
-            min_page -= diff
+        else:
+            # 显示的最小页码
+            min_page = page_num - 2
+            # 显示的最大页码
+            max_page = page_num + 2
+            # 若最小页码小于1，则设置最小页码为1
+            # 并将小于的值加在最大页码上，保证最小页码到最大页码有5页
+            diff = min_page - 1
+            if diff < 0:
+                min_page = 1
+                max_page -= diff
+            # 若最大页码大于总页数，则设置最大页码为总页数
+            # 并将大于的值减在最小页码上，保证最小页码到最大页码有5页
+            diff = max_page - total_page
+            if diff > 0:
+                max_page = total_page
+                min_page -= diff
         # 设置显示的页码范围
         pages = range(min_page, max_page + 1)
         # 组织上下文

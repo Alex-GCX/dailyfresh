@@ -69,6 +69,8 @@
         order_id = $(this).attr('order_id')
         if ($(this).attr('order_status') =='1'){
             pay_method = $(this).attr('pay_method')
+            $(this).text('支付中')
+            $(this).attr('order_status','0')
             send_pay_ajax(order_id, pay_method)
         }
         else if($(this).attr('order_status') == '4'){

@@ -28,12 +28,13 @@ sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 SECRET_KEY = '_wm!3sg!&9yn5@coj*jgm9pm_+cg6+leklo$3z2!)%t$4y9apx'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 # add by Alex 设置本地IP变量
-LOCAL_IP = '192.168.183.129'
+# LOCAL_IP = '192.168.183.129'
+LOCAL_IP = '47.102.114.90'
 
-ALLOWED_HOSTS = [LOCAL_IP, ]
+ALLOWED_HOSTS = [LOCAL_IP]
 
 # Application definition
 
@@ -145,7 +146,7 @@ STATIC_URL = '/static/'
 # 静态文件
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 # 收集的静态文件路径
-STATIC_ROOT = '/home/gong/study/projects/www/dailyfresh/static'
+STATIC_ROOT = '/home/alex/python/dailyfresh/django_static'
 
 #django认证系统使用的模型类
 AUTH_USER_MODEL = 'user.User'
@@ -170,6 +171,10 @@ EMAIL_HOST_USER = 'g1242556827@163.com'
 EMAIL_HOST_PASSWORD = 'ENYWOVQSLWHGIUEX'
 #收件人看到的发件人
 EMAIL_FROM = '天天生鲜<g1242556827@163.com>'
+# 阿里云发送邮件配置
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+
 
 # celery参数配置
 CELERY_BROKER_URL = 'redis://localhost:6379/0' # Broker配置，使用Redis作为消息中间件
@@ -224,8 +229,8 @@ ALIPAY_PUBLIC_KEY = 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu7VpkMSjW6ay396
 # 订单超时时间：如果买家超过这个时间不付款,会关闭交易(最小1m分钟)
 ALIPAY_EXPRESS = '10m'
 # 回调通知地址
-ALIPAY_NOTIFY_URL = "http://%s:8000/order/pay_result/"
-ALIPAY_RETURN_URL = "http://%s:8000/order/pay_result/"
+ALIPAY_NOTIFY_URL = ""
+ALIPAY_RETURN_URL = ""
 #################################
 # add by Alex end
 #################################
