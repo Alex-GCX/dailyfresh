@@ -17,7 +17,7 @@ def send_mail_task(username, to_email, token):
     recipient_list = [
         to_email,
     ]
-    url = 'http://%s:8000/user/active/%s/' % (settings.LOCAL_IP, token)
+    url = 'http://%s/user/active/%s/' % (settings.LOCAL_IP, token)
     html_message = '<p1>%s,欢迎注册天天生鲜</p1></br>请点击下面链接进行激活：</br><a href=%s>%s</a>' % (
         username, url, url)
     send_mail(subject,
