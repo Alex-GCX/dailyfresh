@@ -34,7 +34,7 @@ DEBUG = True
 # LOCAL_IP = '192.168.183.129'
 LOCAL_IP = '47.102.114.90'
 
-ALLOWED_HOSTS = [LOCAL_IP]
+ALLOWED_HOSTS = [LOCAL_IP, 'www.alex-gcx.top', 'alex-gcx.top']
 
 # Application definition
 
